@@ -1,0 +1,61 @@
+# docker compose up --build
+#   db      PostgreSQL
+#   init    one-shot: creates tables, seeds demo users, replays demo signals
+#   api     FastAPI on http://localhost:8000/docs
+#   worker  runs the pipeline on a schedule
+
+x-app-env: &app-env
+  DATABASE_URL: postgresql+psycopg://signals:signals@db:5432/signals
+  DATA_PROVIDER: ${DATA_PROVIDER:-synthetic}
+  POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-300}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: signals
+      POSTGRES_PASSWORD: signals
+      POSTGRES_DB: signals
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U signals -d signals"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  init:
+    build: .
+    image: market-signals-ai:dev
+    command: python -m app.cli init-db --with-demo-signals
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build: .
+    image: market-signals-ai:dev
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  worker:
+    build: .
+    image: market-signals-ai:dev
+    command: python -m app.worker
+    environment: *app-env
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
