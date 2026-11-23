@@ -1,4 +1,4 @@
-# SignalForge AI
+# SignalForge_AI
 
 ![CI](https://github.com/kausar32/SignalForge/actions/workflows/ci.yml/badge.svg)
 
