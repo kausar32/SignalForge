@@ -1,6 +1,6 @@
-# MarketSignals AI
+# SignalForge AI
 
-![CI](https://github.com/<your-username>/market-signals-ai/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/kausar32/SignalForge/actions/workflows/ci.yml/badge.svg)
 
 A signal pipeline for Indian indices, gold and Bitcoin. A strategy engine produces signals, a router delivers each one only to the users who follow that asset, and (next) an AI layer explains every signal and answers questions about it through tool use.
 
